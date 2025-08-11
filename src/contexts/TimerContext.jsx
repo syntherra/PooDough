@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore'
+import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -197,6 +197,66 @@ function TimerProvider({ children }) {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
+  // Delete all user sessions
+  const deleteAllSessions = useCallback(async () => {
+    if (!user) {
+      toast.error('Please log in to delete sessions')
+      return false
+    }
+    
+    setLoading(true)
+    
+    try {
+      // Get all user sessions
+      const q = query(
+        collection(db, 'sessions'),
+        where('userId', '==', user.uid)
+      )
+      
+      const querySnapshot = await getDocs(q)
+      
+      if (querySnapshot.empty) {
+        toast.success('No sessions to delete')
+        setLoading(false)
+        return true
+      }
+      
+      // Use batch to delete all sessions
+      const batch = writeBatch(db)
+      querySnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref)
+      })
+      
+      await batch.commit()
+      
+      // Reset user stats
+      await updateUserProfile({
+        totalSessions: 0,
+        totalEarnings: 0,
+        totalTime: 0,
+        longestSession: 0,
+        lastSessionAt: null
+      })
+      
+      // Clear local sessions
+      setSessions([])
+      
+      toast.success('All session history deleted successfully! 🗑️')
+      return true
+      
+    } catch (error) {
+      console.error('Error deleting sessions:', error)
+      if (error.code === 'permission-denied') {
+        toast.error('Permission denied. Please sign in again.')
+      } else {
+        toast.error('Failed to delete session history')
+      }
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }, [user, updateUserProfile])
+
   // Currency formatting is now handled by CurrencyContext
 
   const value = {
@@ -208,6 +268,7 @@ function TimerProvider({ children }) {
     startTimer,
     stopTimer,
     loadSessions,
+    deleteAllSessions,
     formatTime,
     isWorkHours: isWorkHours(),
     hourlyRate: getHourlyRate()

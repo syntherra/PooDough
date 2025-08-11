@@ -131,7 +131,7 @@ function Login() {
             PooDough
           </h1>
           <p className="text-gray-400 text-lg">
-            Get paid to poop! 💩💰
+            Turn your bathroom breaks into cold hard cash! 💩💰
           </p>
         </div>
         

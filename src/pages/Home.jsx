@@ -40,36 +40,36 @@ function Home() {
   
   const statsCards = [
     {
-      title: 'Today\'s Earnings',
+      title: '💰 Today\'s Poop Profit',
       value: formatCurrency(todayEarnings),
       icon: DollarSign,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
-      change: todaySessions.length > 0 ? `${todaySessions.length} sessions` : 'No sessions yet'
+      change: todaySessions.length > 0 ? `${todaySessions.length} royal visits` : 'No throne time yet!'
     },
     {
-      title: 'Total Earnings',
+      title: '🏆 Total Toilet Treasure',
       value: formatCurrency(userProfile?.totalEarnings || 0),
       icon: TrendingUp,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10',
-      change: `${userProfile?.totalSessions || 0} total sessions`
+      change: `${userProfile?.totalSessions || 0} bathroom breaks`
     },
     {
-      title: 'Today\'s Time',
+      title: '⏰ Today\'s Throne Time',
       value: formatTime(todayTime),
       icon: Clock,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
-      change: todayTime > 0 ? 'Time well spent!' : 'Start your first session'
+      change: todayTime > 0 ? 'Quality time! 🚽' : 'Time to drop some logs!'
     },
     {
-      title: 'Current Streak',
+      title: '🔥 Poop Streak',
       value: `${currentStreak} days`,
       icon: Award,
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-500/10',
-      change: currentStreak > 0 ? 'Keep it up!' : 'Start your streak'
+      change: currentStreak > 0 ? 'You\'re on a roll! 🧻' : 'Start your streak!'
     }
   ]
   
@@ -84,16 +84,16 @@ function Home() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-white">
-              Welcome back, {user?.displayName?.split(' ')[0] || 'Pooper'}! 👋
+              Welcome back, {user?.displayName?.split(' ')[0] || 'Poop Master'}! 💩
             </h1>
             <p className="text-dark-400 mt-1">
               {isWorkHours ? (
                 <span className="text-green-400 flex items-center gap-1">
                   <Zap size={16} />
-                  You're earning money right now!
+                  Ka-ching! You're making money on the toilet! 🤑
                 </span>
               ) : (
-                'Ready for your next session?'
+                'Ready to turn your bathroom breaks into cash? 🚽💰'
               )}
             </p>
           </div>
@@ -118,7 +118,7 @@ function Home() {
           >
             <div className="flex items-center justify-center gap-3">
               <Timer size={28} />
-              <span className="font-bold">Start New Session</span>
+              <span className="font-bold">Time to Make Some Dough! 💩💰</span>
             </div>
             {isWorkHours && (
               <motion.div
@@ -172,7 +172,7 @@ function Home() {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-display font-semibold text-white">
-            Recent Sessions
+            🧻 Recent Bathroom Breaks
           </h2>
           <Link 
             to="/history" 
@@ -212,7 +212,7 @@ function Home() {
                       {formatCurrency(session.earnings)}
                     </p>
                     <p className="text-dark-500 text-xs">
-                      {session.wasWorkHours ? 'Work time session' : 'Off hours'}
+                      {session.wasWorkHours ? 'Paid poop break! 💰' : 'Personal throne time 🚽'}
                     </p>
                   </div>
                 </motion.div>
@@ -228,14 +228,14 @@ function Home() {
           >
             <div className="text-6xl mb-4">🚽</div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              No sessions yet!
+              Your throne awaits! 👑
             </h3>
             <p className="text-dark-400 mb-4">
-              Start your first bathroom break timer and begin earning!
+              Time to drop your first log and start making that sweet toilet treasure! 💩💰
             </p>
             <Link to="/timer">
               <button className="btn-primary">
-                Start First Session
+                Drop Your First Log! 🚽
               </button>
             </Link>
           </motion.div>
@@ -251,13 +251,13 @@ function Home() {
       >
         <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
           <Target size={20} className="text-orange-400" />
-          Pro Tips
+          💩 Poop Pro Tips
         </h3>
         <div className="space-y-2 text-sm text-dark-300">
-          <p>💡 Set up your salary in Profile to see accurate earnings</p>
-          <p>⏰ Sessions during work hours earn you money!</p>
-          <p>🏆 Build streaks to climb the leaderboard</p>
-          <p>👑 Upgrade to Premium for exclusive features</p>
+          <p>💰 Set your salary to see how much your bathroom breaks are worth!</p>
+          <p>🕘 Poop during work hours = getting paid to poop! 💸</p>
+          <p>🔥 Build daily streaks to become the ultimate poop champion!</p>
+          <p>👑 Go Premium for exclusive toilet features and bragging rights!</p>
         </div>
       </motion.div>
     </div>

@@ -108,10 +108,10 @@ function Premium() {
         >
           <div className="text-8xl mb-6">👑</div>
           <h1 className="text-4xl font-display font-bold gradient-text mb-4">
-            You're Premium!
+            You're Royalty! 👑
           </h1>
           <p className="text-dark-400 text-lg mb-8">
-            Enjoy all the exclusive features and benefits
+            Enjoy all the exclusive toilet throne features and poop perks! 🚽✨
           </p>
           
           <div className="card p-6 max-w-md mx-auto">
@@ -146,10 +146,10 @@ function Premium() {
       >
         <div className="text-6xl mb-4">👑</div>
         <h1 className="text-4xl font-display font-bold gradient-text mb-2">
-          Go Premium
+          👑 Royal Toilet Membership
         </h1>
         <p className="text-dark-400 text-lg">
-          Unlock exclusive features and maximize your earnings!
+          Unlock exclusive poop features and maximize your toilet treasure! 💩💰
         </p>
       </motion.div>
       

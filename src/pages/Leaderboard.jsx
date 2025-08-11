@@ -365,10 +365,10 @@ function Leaderboard() {
         className="text-center mb-6"
       >
         <h1 className="text-3xl font-display font-bold gradient-text mb-2">
-          Leaderboard
+          🏆 Poop Champions Board
         </h1>
         <p className="text-dark-400">
-          See who's earning the most on the throne!
+          See who's making the most toilet treasure! 💩💰
         </p>
       </motion.div>
       
@@ -696,7 +696,7 @@ function Leaderboard() {
             >
               <h3 className="text-white font-semibold flex items-center gap-2">
                 <Users size={20} className="text-primary-400" />
-                Friends Leaderboard ({friendsLeaders.length + (userProfile ? 1 : 0)})
+                Poop Buddy Rankings ({friendsLeaders.length + (userProfile ? 1 : 0)})
               </h3>
               {(() => {
                 // Create combined list with user and friends

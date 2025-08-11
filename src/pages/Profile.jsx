@@ -11,19 +11,24 @@ import {
   Save,
   X,
   Crown,
-  Camera
+  Camera,
+  Trash2
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { useTimer } from '../hooks/useTimer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 function Profile() {
   const { user, userProfile, updateUserProfile, logout, checkDisplayNameAvailability } = useAuth()
   const { formatCurrency } = useCurrency()
+  const { deleteAllSessions, loading: timerLoading } = useTimer()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, message: '' })
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteCountdown, setDeleteCountdown] = useState(5)
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || '',
     salary: userProfile?.salary || '',
@@ -148,6 +153,38 @@ function Profile() {
     }
   }
   
+  // Handle delete history confirmation
+  const handleDeleteHistory = () => {
+    setShowDeleteConfirm(true)
+    setDeleteCountdown(5)
+  }
+  
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setDeleteCountdown(5)
+  }
+  
+  const handleConfirmDelete = async () => {
+    const success = await deleteAllSessions()
+    if (success) {
+      setShowDeleteConfirm(false)
+      setDeleteCountdown(5)
+    }
+  }
+  
+  // Countdown timer for delete button
+  useEffect(() => {
+    let interval = null
+    if (showDeleteConfirm && deleteCountdown > 0) {
+      interval = setInterval(() => {
+        setDeleteCountdown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [showDeleteConfirm, deleteCountdown])
+  
   // Calculate hourly rate
   const hourlyRate = userProfile?.salary ? userProfile.salary / (40 * 52) : 0
   
@@ -163,10 +200,10 @@ function Profile() {
       >
         <div>
           <h1 className="text-3xl font-display font-bold text-white">
-            Profile
+            💩 Poop Profile
           </h1>
           <p className="text-dark-400 mt-1">
-            Manage your account and earnings settings
+            Manage your toilet treasure settings and poop stats
           </p>
         </div>
         
@@ -271,19 +308,19 @@ function Profile() {
             <p className="text-2xl font-bold text-primary-400">
               {formatCurrency(userProfile?.totalEarnings || 0)}
             </p>
-            <p className="text-dark-400 text-sm">Total Earned</p>
+            <p className="text-dark-400 text-sm">Toilet Treasure</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-blue-400">
               {userProfile?.totalSessions || 0}
             </p>
-            <p className="text-dark-400 text-sm">Sessions</p>
+            <p className="text-dark-400 text-sm">Poop Sessions</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-accent-400">
               {userProfile?.currentStreak || 0}
             </p>
-            <p className="text-dark-400 text-sm">Day Streak</p>
+            <p className="text-dark-400 text-sm">Poop Streak</p>
           </div>
         </div>
       </motion.div>
@@ -297,13 +334,13 @@ function Profile() {
       >
         <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <DollarSign size={24} className="text-green-400" />
-          Salary Settings
+          💰 Poop Profit Settings
         </h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-2">
-              Annual Salary
+              Annual Salary (Your Poop Worth!)
             </label>
             {isEditing ? (
               <input
@@ -325,7 +362,7 @@ function Profile() {
           
           {userProfile?.salary > 0 && (
             <div className="bg-dark-700 rounded-lg p-4">
-              <p className="text-dark-300 text-sm mb-1">Your hourly rate:</p>
+              <p className="text-dark-300 text-sm mb-1">Your poop rate per hour:</p>
               <p className="text-primary-400 text-xl font-bold">
                 {formatCurrency(hourlyRate)}/hour
               </p>
@@ -343,7 +380,7 @@ function Profile() {
       >
         <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <Clock size={24} className="text-blue-400" />
-          Work Schedule
+          🕘 Paid Poop Hours
         </h3>
         
         <div className="space-y-4">
@@ -431,6 +468,14 @@ function Profile() {
         )}
         
         <button 
+          onClick={handleDeleteHistory}
+          className="w-full btn-ghost flex items-center justify-center gap-3 py-4 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
+        >
+          <Trash2 size={20} />
+          <span>Delete All History</span>
+        </button>
+        
+        <button 
           onClick={handleLogout}
           className="w-full btn-ghost flex items-center justify-center gap-3 py-4 text-red-400 hover:text-red-300 hover:bg-red-500/10"
         >
@@ -438,6 +483,58 @@ function Profile() {
           <span>Sign Out</span>
         </button>
       </motion.div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-dark-800 rounded-2xl p-6 max-w-md w-full border border-dark-700"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} className="text-red-400" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-2">
+                Delete All History?
+              </h3>
+              
+              <p className="text-dark-300 mb-6">
+                This will permanently delete all your session history and reset your stats. This action cannot be undone.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelDelete}
+                  className="flex-1 btn-ghost py-3"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleteCountdown > 0 || timerLoading}
+                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                    deleteCountdown > 0 || timerLoading
+                      ? 'bg-dark-700 text-dark-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                  }`}
+                >
+                  {timerLoading ? (
+                    <LoadingSpinner size="sm" />
+                  ) : deleteCountdown > 0 ? (
+                    `Delete (${deleteCountdown}s)`
+                  ) : (
+                    'Yes, Delete'
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

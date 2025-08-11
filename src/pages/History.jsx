@@ -127,28 +127,28 @@ function History() {
   
   const statCards = [
     {
-      title: 'Total Earnings',
+      title: '💰 Total Toilet Treasure',
       value: formatCurrency(stats.totalEarnings),
       icon: DollarSign,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10'
     },
     {
-      title: 'Total Sessions',
+      title: '💩 Total Poop Sessions',
       value: stats.totalSessions.toString(),
       icon: Target,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10'
     },
     {
-      title: 'Total Time',
+      title: '⏰ Total Throne Time',
       value: formatTime(stats.totalTime),
       icon: Clock,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10'
     },
     {
-      title: 'Longest Session',
+      title: '🏆 Epic Poop Record',
       value: formatTime(stats.longestSession),
       icon: Award,
       color: 'text-yellow-400',
@@ -166,10 +166,10 @@ function History() {
       >
         <div>
           <h1 className="text-3xl font-display font-bold text-white">
-            Session History
+            💩 Poop Log
           </h1>
           <p className="text-dark-400 mt-1">
-            Track your bathroom break earnings
+            Your legendary bathroom break earnings history
           </p>
         </div>
         
@@ -278,21 +278,21 @@ function History() {
       >
         <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
           <TrendingUp size={20} className="text-primary-400" />
-          {viewMode === 'calendar' ? 'Monthly Insights' : 'Insights'}
+          {viewMode === 'calendar' ? '📊 Monthly Poop Stats' : '📊 Poop Analytics'}
         </h3>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex justify-between items-center">
-            <span className="text-dark-300">Average Session</span>
+            <span className="text-dark-300">Average Poop Time</span>
             <span className="text-white font-medium">{formatTime(stats.averageSession)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-dark-300">Work Hours Sessions</span>
+            <span className="text-dark-300">Paid Poop Breaks</span>
             <span className="text-green-400 font-medium">
               {stats.workHoursSessions} / {stats.totalSessions}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-dark-300">Average Earnings per Session</span>
+            <span className="text-dark-300">Average Poop Profit</span>
             <span className="text-primary-400 font-medium">
               {formatCurrency(stats.totalSessions > 0 ? stats.totalEarnings / stats.totalSessions : 0)}
             </span>
@@ -483,7 +483,7 @@ function History() {
           transition={{ delay: 0.3 }}
         >
           <h3 className="text-white font-semibold mb-4">
-            Sessions ({filteredSessions.length})
+            🧻 Poop Sessions ({filteredSessions.length})
           </h3>
           
           {filteredSessions.length > 0 ? (
@@ -533,7 +533,7 @@ function History() {
                           {formatCurrency(session.earnings)}
                         </p>
                         <p className="text-xs text-dark-500">
-                          {session.wasWorkHours ? 'Work time session' : 'Off hours'}
+                          {session.wasWorkHours ? 'Paid poop break! 💰' : 'Personal throne time 🚽'}
                         </p>
                       </div>
                     </div>
@@ -548,14 +548,14 @@ function History() {
               transition={{ delay: 0.4 }}
               className="card p-8 text-center"
             >
-              <div className="text-6xl mb-4">📊</div>
+              <div className="text-6xl mb-4">🚽</div>
               <h3 className="text-lg font-semibold text-white mb-2">
-                No sessions found
+                No poop sessions found!
               </h3>
               <p className="text-dark-400 mb-4">
                 {filterPeriod === 'all' 
-                  ? 'Start your first bathroom break timer!' 
-                  : `No sessions found for ${filterOptions.find(o => o.value === filterPeriod)?.label.toLowerCase()}`
+                  ? 'Time to drop your first log and start making that toilet treasure! 💩💰' 
+                  : `No bathroom breaks found for ${filterOptions.find(o => o.value === filterPeriod)?.label.toLowerCase()}. Time to get pooping! 🚽`
                 }
               </p>
             </motion.div>

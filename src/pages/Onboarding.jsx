@@ -158,10 +158,10 @@ function Onboarding() {
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">💰</div>
         <h2 className="text-2xl font-display font-bold text-white mb-2">
-          What's your salary?
+          What's your poop worth? 💩💰
         </h2>
         <p className="text-gray-400">
-          We'll use this to calculate your earnings per bathroom break
+          We'll calculate how much you earn per epic bathroom break!
         </p>
       </div>
       
@@ -189,7 +189,7 @@ function Onboarding() {
       {/* Annual Salary */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          Annual Salary
+          Annual Salary (Your Toilet Treasure Rate!)
         </label>
         <div className="relative">
           <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -220,10 +220,10 @@ function Onboarding() {
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">⏰</div>
         <h2 className="text-2xl font-display font-bold text-white mb-2">
-          Work Schedule
+          Paid Poop Hours! 🕘
         </h2>
         <p className="text-gray-400">
-          When do you typically work? This helps us calculate paid vs unpaid breaks.
+          When do you work? This helps us calculate your paid vs personal poop breaks!
         </p>
       </div>
       
@@ -262,7 +262,7 @@ function Onboarding() {
       {formData.workStartTime && formData.workEndTime && (
         <div className="card p-4 bg-orange-500/10 border-orange-500/30">
           <p className="text-orange-400 text-sm">
-            Work hours: {formData.workStartTime} - {formData.workEndTime}
+            Paid poop hours: {formData.workStartTime} - {formData.workEndTime}
             {' '}({Math.abs(new Date(`2000-01-01T${formData.workEndTime}`) - new Date(`2000-01-01T${formData.workStartTime}`)) / (1000 * 60 * 60)} hours)
           </p>
         </div>
@@ -280,10 +280,10 @@ function Onboarding() {
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">📅</div>
         <h2 className="text-2xl font-display font-bold text-white mb-2">
-          Work Days
+          Paid Poop Days! 📅💩
         </h2>
         <p className="text-gray-400">
-          Select the days you typically work
+          Select the days you get paid to poop!
         </p>
       </div>
       
@@ -343,10 +343,10 @@ function Onboarding() {
         {/* Welcome Message */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-display font-bold gradient-text mb-2">
-            Welcome to PooDough!
+            Welcome to the Throne! 🚽👑
           </h1>
           <p className="text-gray-400">
-            Let's set up your profile to start earning
+            Let's set up your royal toilet profile to start making that sweet poop money! 💩💰
           </p>
         </div>
         

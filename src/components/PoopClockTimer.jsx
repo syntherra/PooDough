@@ -12,8 +12,9 @@ const PoopClockTimer = ({ isRunning, elapsedTime }) => {
   }, []);
 
   // Calculate progress based on actual elapsed time in 60-second cycles
-  const secondsElapsed = elapsedTime ? (elapsedTime / 1000) % 60 : 0;
-  const progress = isRunning ? secondsElapsed / 60 : 0;
+  // elapsedTime is already in seconds from TimerContext
+  const secondsElapsed = elapsedTime ? elapsedTime % 60 : 0;
+  const progress = isRunning && elapsedTime ? secondsElapsed / 60 : 0;
   const radius = 120;
   const centerX = 150;
   const centerY = 150;
@@ -21,7 +22,8 @@ const PoopClockTimer = ({ isRunning, elapsedTime }) => {
   
   // Calculate the circumference and dash offset for the loading ring
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress * circumference);
+  // Start from full circumference (empty) and subtract progress to fill the circle
+  const strokeDashoffset = circumference * (1 - progress);
   
   // Bouncing poop animation - limited range to stay above toilet bowl
   const bounceHeight = 20;

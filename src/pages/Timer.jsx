@@ -177,7 +177,7 @@ function Timer() {
                 ) : (
                   <>
                     <Play size={24} />
-                    <span>Start Session</span>
+                    <span>Start Pooping! 💩</span>
                   </>
                 )}
               </motion.button>
@@ -194,7 +194,7 @@ function Timer() {
                 ) : (
                   <>
                     <Square size={24} />
-                    <span>Stop Session</span>
+                    <span>Flush & Finish! 🚽</span>
                   </>
                 )}
               </motion.button>
@@ -221,28 +221,28 @@ function Timer() {
               <div className="text-center">
                 <div className="text-6xl mb-4">🎉</div>
                 <h3 className="text-2xl font-bold text-white mb-2">
-                  Session Complete!
+                  Poop Session Complete! 💩
                 </h3>
                 <p className="text-dark-400 mb-4">
-                  Awesome work! Here's your session summary:
+                  Holy crap! You just got paid to poop! Here's your bathroom breakdown:
                 </p>
                 
                 {/* Session Stats */}
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between items-center p-3 bg-dark-800 rounded-lg">
-                    <span className="text-dark-300">Duration</span>
+                    <span className="text-dark-300">Throne Time</span>
                     <span className="text-white font-bold">{formatTime(lastSession.duration)}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-dark-800 rounded-lg">
-                    <span className="text-dark-300">Earnings</span>
+                    <span className="text-dark-300">Poop Profit</span>
                     <span className="text-green-400 font-bold">{formatCurrency(lastSession.earnings)}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-dark-800 rounded-lg">
-                    <span className="text-dark-300">Session Type</span>
+                    <span className="text-dark-300">Poop Type</span>
                     <span className={`font-bold ${
                       lastSession.wasWorkHours ? 'text-green-400' : 'text-orange-400'
                     }`}>
-                      {lastSession.wasWorkHours ? 'Work Time Sessions' : 'Off Hours'}
+                      {lastSession.wasWorkHours ? 'Paid Poop Break! 💰' : 'Personal Throne Time 🚽'}
                     </span>
                   </div>
                 </div>
@@ -254,7 +254,7 @@ function Timer() {
                   }}
                   className="btn-primary w-full text-lg py-3 mb-3"
                 >
-                  View History
+                  View Poop Log 📜
                 </button>
                 
                 {/* Sync Status */}
