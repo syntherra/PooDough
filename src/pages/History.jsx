@@ -105,7 +105,7 @@ function History() {
     const totalEarnings = filteredSessions.reduce((sum, session) => sum + (session.earnings || 0), 0)
     const totalTime = filteredSessions.reduce((sum, session) => sum + (session.duration || 0), 0)
     const longestSession = Math.max(...filteredSessions.map(s => s.duration || 0), 0)
-    const averageSession = totalSessions > 0 ? totalTime / totalSessions : 0
+    const averageSession = totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0
     const workHoursSessions = filteredSessions.filter(s => s.wasWorkHours).length
     
     return {
