@@ -11,15 +11,7 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, googleProvider, db } from '../lib/firebase'
 import toast from 'react-hot-toast'
 
-const AuthContext = createContext()
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+export const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -28,12 +20,14 @@ export function AuthProvider({ children }) {
 
   // Create user profile in Firestore
   const createUserProfile = async (user, additionalData = {}) => {
+    console.log('👤 Creating/loading user profile for:', user?.uid)
     if (!user) return
     
     const userRef = doc(db, 'users', user.uid)
     const userSnap = await getDoc(userRef)
     
     if (!userSnap.exists()) {
+      console.log('🆕 Creating new user profile')
       const { displayName, email, photoURL } = user
       const createdAt = new Date()
       
@@ -62,20 +56,29 @@ export function AuthProvider({ children }) {
       try {
         await setDoc(userRef, profileData)
         setUserProfile(profileData) // Set the profile in state immediately
+        return profileData
       } catch (error) {
-        console.error('Error creating user profile:', error)
+        console.error('❌ Error creating user profile:', error)
         toast.error('Failed to create user profile')
+        return null
       }
     } else {
       // Profile exists, load it into state
-      setUserProfile(userSnap.data())
+      const existingProfile = userSnap.data()
+      console.log('📋 Existing profile found and set in state:', existingProfile)
+      setUserProfile(existingProfile)
+      return existingProfile
     }
-    
-    return userRef
   }
 
   // Get user profile from Firestore
   const getUserProfile = async (userId) => {
+    if (!userId) {
+      console.warn('getUserProfile called without userId')
+      setUserProfile({})
+      return {}
+    }
+    
     try {
       const userRef = doc(db, 'users', userId)
       const userSnap = await getDoc(userRef)
@@ -86,15 +89,20 @@ export function AuthProvider({ children }) {
         return profileData
       } else {
         setUserProfile({})
+        return {}
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error)
+      console.error('❌ Error fetching user profile:', error)
+      if (error.code !== 'permission-denied') {
+        toast.error('Failed to load user profile')
+      }
+      setUserProfile({})
     }
     return null
   }
 
   // Update user profile
-  const updateUserProfile = async (updates) => {
+  const updateUserProfile = async (updates, showToast = true) => {
     if (!user) return
     
     try {
@@ -104,11 +112,16 @@ export function AuthProvider({ children }) {
         updatedAt: new Date()
       })
       
+      // Update local state immediately
       setUserProfile(prev => ({ ...prev, ...updates }))
-      toast.success('Profile updated successfully!')
+      
+      if (showToast && !updates.onboardingCompleted) {
+        toast.success('Profile updated successfully!')
+      }
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error('Failed to update profile')
+      throw error
     }
   }
 
@@ -147,12 +160,15 @@ export function AuthProvider({ children }) {
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
-      const { user } = await signInWithPopup(auth, googleProvider)
-      await createUserProfile(user)
+      const result = await signInWithPopup(auth, googleProvider)
+      
+      const profile = await createUserProfile(user)
+      console.log('📋 Profile creation/loading result:', profile)
+      
       toast.success('Welcome to PooDough!')
       return user
     } catch (error) {
-      console.error('Google sign in error:', error)
+      console.error('❌ Google sign in error:', error)
       toast.error('Failed to sign in with Google')
       throw error
     }
@@ -199,10 +215,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔥 Auth state changed:', user ? `User: ${user.uid}` : 'No user')
       setUser(user)
       
       if (user) {
-        await getUserProfile(user.uid)
+        const profile = await getUserProfile(user.uid)
+        setUserProfile(profile)
       } else {
         setUserProfile(null)
       }
@@ -217,14 +235,17 @@ export function AuthProvider({ children }) {
     user,
     userProfile,
     loading,
-    signUp,
     signIn,
+    signUp,
     signInWithGoogle,
     logout,
     updateUserProfile,
+    createUserProfile,
     getUserProfile,
     completeOnboarding
   }
+  
+
 
   return (
     <AuthContext.Provider value={value}>
@@ -232,3 +253,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
+
+export default AuthProvider

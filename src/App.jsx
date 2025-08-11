@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './contexts/AuthContext'
+import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Timer from './pages/Timer'
@@ -14,47 +14,12 @@ import LoadingSpinner from './components/LoadingSpinner'
 
 function App() {
   const { user, loading, userProfile } = useAuth()
-
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <LoadingSpinner size="xl" />
       </div>
-    )
-  }
-
-  // Protected routes component
-  const ProtectedRoutes = () => {
-    if (!user) {
-      return <Navigate to="/login" replace />
-    }
-    
-    // Show loading while userProfile is being fetched
-    if (user && userProfile === null) {
-      return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-          <LoadingSpinner size="xl" />
-        </div>
-      )
-    }
-    
-    // Check if user needs onboarding
-    if (user && userProfile && !userProfile.onboardingCompleted) {
-      return <Navigate to="/onboarding" replace />
-    }
-    
-    return (
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/timer" element={<Timer />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/premium" element={<Premium />} />
-        </Routes>
-      </Layout>
     )
   }
 
@@ -66,7 +31,24 @@ function App() {
         <Route path="/onboarding" element={user ? <Onboarding /> : <Navigate to="/login" />} />
         
         {/* Protected routes */}
-        <Route path="/*" element={<ProtectedRoutes />} />
+        <Route path="/*" element={
+          !user ? <Navigate to="/login" replace /> :
+          userProfile === null ? (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+              <LoadingSpinner size="xl" />
+            </div>
+          ) :
+          !userProfile.onboardingCompleted ? <Navigate to="/onboarding" replace /> :
+          <Layout />
+        }>
+          <Route path="" element={<Navigate to="home" replace />} />
+          <Route path="home" element={<Home />} />
+          <Route path="timer" element={<Timer />} />
+          <Route path="history" element={<History />} />
+          <Route path="leaderboard" element={<Leaderboard />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="premium" element={<Premium />} />
+        </Route>
       </Routes>
     </div>
   )

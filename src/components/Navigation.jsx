@@ -9,7 +9,7 @@ import {
   Crown
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 function Navigation() {
   const { userProfile } = useAuth()

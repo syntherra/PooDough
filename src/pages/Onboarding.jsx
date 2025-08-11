@@ -8,7 +8,7 @@ import {
   Check,
   Globe
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
@@ -132,16 +132,21 @@ function Onboarding() {
       await updateUserProfile({
         currency: formData.currency,
         currencySymbol: selectedCurrency.symbol,
-        annualSalary: parseFloat(formData.annualSalary),
+        salary: parseFloat(formData.annualSalary),
+        annualSalary: parseFloat(formData.annualSalary), // Keep both for compatibility
         workStartTime: formData.workStartTime,
         workEndTime: formData.workEndTime,
         workDays: formData.workDays,
         onboardingCompleted: true,
         profileCompleted: true
-      })
+      }, false) // Don't show toast from updateUserProfile
       
       toast.success('Profile setup complete! 🎉')
-      navigate('/home')
+      
+      // Small delay to ensure state update propagates
+      setTimeout(() => {
+        navigate('/home')
+      }, 100)
     } catch (error) {
       console.error('Onboarding error:', error)
       toast.error('Failed to save profile. Please try again.')

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
-import { useAuth } from './AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 
 const TimerContext = createContext()
@@ -28,7 +28,7 @@ export function TimerProvider({ children }) {
     if (!userProfile) return false
     
     const now = new Date()
-    const currentDay = now.toLocaleLowerCase().slice(0, 3) + now.toLocaleLowerCase().slice(3)
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     const currentTime = now.toTimeString().slice(0, 5)
     
     const workDays = userProfile.workDays || []
@@ -127,7 +127,11 @@ export function TimerProvider({ children }) {
       
     } catch (error) {
       console.error('Error saving session:', error)
-      toast.error('Failed to save session')
+      if (error.code === 'permission-denied') {
+        toast.error('Please sign in to save your session')
+      } else {
+        toast.error('Failed to save session')
+      }
     } finally {
       setLoading(false)
     }
@@ -135,7 +139,10 @@ export function TimerProvider({ children }) {
 
   // Load user sessions
   const loadSessions = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setSessions([])
+      return
+    }
     
     try {
       const q = query(
@@ -153,6 +160,12 @@ export function TimerProvider({ children }) {
       setSessions(userSessions)
     } catch (error) {
       console.error('Error loading sessions:', error)
+      // Set empty sessions array on error to prevent app crash
+      setSessions([])
+      // Only show toast for non-permission errors
+      if (error.code !== 'permission-denied' && !error.message?.includes('permissions')) {
+        toast.error('Failed to load session history')
+      }
     }
   }, [user])
 
@@ -174,14 +187,14 @@ export function TimerProvider({ children }) {
     }
   }, [isRunning, startTime, calculateEarnings])
 
-  // Load sessions when user changes
+  // Load sessions when user and profile are ready
   useEffect(() => {
-    if (user) {
+    if (user && userProfile) {
       loadSessions()
     } else {
       setSessions([])
     }
-  }, [user, loadSessions])
+  }, [user, userProfile, loadSessions])
 
   // Format time helper
   const formatTime = (seconds) => {
@@ -221,3 +234,5 @@ export function TimerProvider({ children }) {
     </TimerContext.Provider>
   )
 }
+
+export default TimerProvider

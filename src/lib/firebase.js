@@ -22,7 +22,19 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
-export const analytics = getAnalytics(app)
+
+// Initialize Analytics with error handling
+let analytics = null
+try {
+  // Only initialize analytics in production or when not blocked
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    analytics = getAnalytics(app)
+  }
+} catch (error) {
+  console.warn('Analytics initialization failed (this is normal with ad blockers):', error.message)
+}
+
+export { analytics }
 export const googleProvider = new GoogleAuthProvider()
 
 // Configure Google Auth Provider

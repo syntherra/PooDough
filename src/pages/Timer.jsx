@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, Square, DollarSign, Clock, Zap, AlertCircle } from 'lucide-react'
 import { useTimer } from '../contexts/TimerContext'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import ToiletPaperRoll from '../components/ToiletPaperRoll'
 import LoadingSpinner from '../components/LoadingSpinner'
 

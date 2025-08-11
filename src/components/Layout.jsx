@@ -1,7 +1,7 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
-import Navigation from './Navigation'
 import { motion } from 'framer-motion'
+import Navigation from './Navigation'
 
 function Layout() {
   return (

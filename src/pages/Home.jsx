@@ -11,12 +11,15 @@ import {
   Award,
   Zap
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useTimer } from '../contexts/TimerContext'
 
 function Home() {
   const { user, userProfile } = useAuth()
   const { sessions, formatCurrency, formatTime, isWorkHours } = useTimer()
+  
+  // Debug logging
+  console.log('🏠 Home component rendering:', { user: !!user, userProfile: !!userProfile, sessionsCount: sessions?.length || 0 })
   
   // Calculate today's stats
   const today = new Date().toDateString()
