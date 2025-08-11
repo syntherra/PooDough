@@ -98,14 +98,14 @@ function Timer() {
       </motion.div>
       
       {/* Main Timer Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         {/* Timer Display */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <div className="text-8xl md:text-9xl font-display font-bold text-white mb-8 font-mono">
+          <div className="text-5xl sm:text-6xl md:text-7xl font-display font-bold text-white mb-6 font-mono">
             {formatTime(elapsedTime)}
           </div>
           
@@ -114,9 +114,9 @@ function Timer() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-3 text-3xl font-bold mb-4"
+              className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-4"
             >
-              <DollarSign className="text-green-400" size={36} />
+              <DollarSign className="text-green-400" size={28} />
               <span className="text-green-400">
                 {formatCurrency(currentEarnings)}
               </span>
@@ -134,7 +134,7 @@ function Timer() {
             <motion.button
               onClick={startTimer}
               disabled={loading}
-              className="btn-primary flex items-center gap-4 text-2xl py-6 px-12 rounded-2xl"
+              className="btn-primary flex items-center gap-3 text-lg sm:text-xl py-4 px-8 sm:py-5 sm:px-10 rounded-xl"
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
             >
@@ -142,7 +142,7 @@ function Timer() {
                 <LoadingSpinner size="md" />
               ) : (
                 <>
-                  <Play size={32} />
+                  <Play size={24} />
                   <span>Start Session</span>
                 </>
               )}
@@ -151,7 +151,7 @@ function Timer() {
             <motion.button
               onClick={handleStop}
               disabled={loading}
-              className="btn-secondary flex items-center gap-4 text-2xl py-6 px-12 rounded-2xl"
+              className="btn-secondary flex items-center gap-3 text-lg sm:text-xl py-4 px-8 sm:py-5 sm:px-10 rounded-xl"
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
             >
@@ -159,7 +159,7 @@ function Timer() {
                 <LoadingSpinner size="md" />
               ) : (
                 <>
-                  <Square size={32} />
+                  <Square size={24} />
                   <span>Stop Session</span>
                 </>
               )}
