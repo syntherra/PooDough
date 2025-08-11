@@ -118,7 +118,7 @@ function Home() {
           >
             <div className="flex items-center justify-center gap-3">
               <Timer size={28} />
-              <span className="font-bold">Time to Make Some Dough! 💩💰</span>
+              <span className="font-bold">Make Some Dough! 💩💰</span>
             </div>
             {isWorkHours && (
               <motion.div
