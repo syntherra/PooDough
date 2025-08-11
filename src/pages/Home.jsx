@@ -12,11 +12,13 @@ import {
   Zap
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useTimer } from '../contexts/TimerContext'
+import { useTimer } from '../hooks/useTimer'
+import { useCurrency } from '../contexts/CurrencyContext'
 
 function Home() {
   const { user, userProfile } = useAuth()
-  const { sessions, formatCurrency, formatTime, isWorkHours } = useTimer()
+  const { sessions, formatTime, isWorkHours } = useTimer()
+  const { formatCurrency } = useCurrency()
   
   // Debug logging
   console.log('🏠 Home component rendering:', { user: !!user, userProfile: !!userProfile, sessionsCount: sessions?.length || 0 })
@@ -140,7 +142,7 @@ function Home() {
           const Icon = stat.icon
           return (
             <motion.div
-              key={stat.title}
+              key={`stat-${index}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
@@ -210,7 +212,7 @@ function Home() {
                       {formatCurrency(session.earnings)}
                     </p>
                     <p className="text-dark-500 text-xs">
-                      {session.wasWorkHours ? 'Work hours' : 'Off hours'}
+                      {session.wasWorkHours ? 'Work time session' : 'Off hours'}
                     </p>
                   </div>
                 </motion.div>

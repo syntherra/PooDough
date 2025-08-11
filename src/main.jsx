@@ -4,15 +4,17 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
-import { AuthProvider } from './contexts/AuthContext.jsx'
-import { TimerProvider } from './contexts/TimerContext.jsx'
+import AuthProvider from './contexts/AuthContext.jsx'
+import TimerProvider from './contexts/TimerContext.jsx'
+import CurrencyProvider from './contexts/CurrencyContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <TimerProvider>
-          <App />
+        <CurrencyProvider>
+          <TimerProvider>
+            <App />
           <Toaster
             position="top-center"
             toastOptions={{
@@ -37,8 +39,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               },
             }}
           />
-        </TimerProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+   </TimerProvider>
+          </CurrencyProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </React.StrictMode>,
+  )

@@ -122,7 +122,7 @@ function Premium() {
               {premiumFeatures.map((feature, index) => {
                 const Icon = feature.icon
                 return (
-                  <div key={index} className="flex items-center gap-3">
+                  <div key={feature.title} className="flex items-center gap-3">
                     <Icon size={20} className={feature.color} />
                     <span className="text-dark-300 text-sm">{feature.title}</span>
                     <Check size={16} className="text-green-400 ml-auto" />
@@ -226,7 +226,7 @@ function Premium() {
           const Icon = feature.icon
           return (
             <motion.div
-              key={index}
+              key={feature.title}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}

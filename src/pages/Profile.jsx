@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, 
@@ -14,13 +14,16 @@ import {
   Camera
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useCurrency } from '../contexts/CurrencyContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 function Profile() {
-  const { user, userProfile, updateUserProfile, logout } = useAuth()
+  const { user, userProfile, updateUserProfile, logout, checkDisplayNameAvailability } = useAuth()
+  const { formatCurrency } = useCurrency()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, message: '' })
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || '',
     salary: userProfile?.salary || '',
@@ -39,6 +42,45 @@ function Profile() {
     { value: 'sunday', label: 'Sunday' }
   ]
   
+  // Debounced username availability check
+  const checkUsernameAvailability = useCallback(
+    async (displayName) => {
+      if (!displayName || displayName === userProfile?.displayName) {
+        setUsernameStatus({ checking: false, available: null, message: '' })
+        return
+      }
+
+      setUsernameStatus({ checking: true, available: null, message: 'Checking availability...' })
+      
+      try {
+        const result = await checkDisplayNameAvailability(displayName, user?.uid)
+        setUsernameStatus({
+          checking: false,
+          available: result.available,
+          message: result.message
+        })
+      } catch (error) {
+        setUsernameStatus({
+          checking: false,
+          available: false,
+          message: 'Error checking availability'
+        })
+      }
+    },
+    [checkDisplayNameAvailability, user?.uid, userProfile?.displayName]
+  )
+
+  // Debounce the username check
+  useEffect(() => {
+    if (!isEditing) return
+    
+    const timeoutId = setTimeout(() => {
+      checkUsernameAvailability(formData.displayName)
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.displayName, checkUsernameAvailability, isEditing])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -57,6 +99,18 @@ function Profile() {
   }
   
   const handleSave = async () => {
+    // Check if username is available before saving
+    if (formData.displayName !== userProfile?.displayName && usernameStatus.available === false) {
+      toast.error('Please choose a different username')
+      return
+    }
+
+    // If username is still being checked, wait for it
+    if (usernameStatus.checking) {
+      toast.error('Please wait while we check username availability')
+      return
+    }
+
     setLoading(true)
     try {
       await updateUserProfile({
@@ -67,6 +121,7 @@ function Profile() {
         workDays: formData.workDays
       })
       setIsEditing(false)
+      setUsernameStatus({ checking: false, available: null, message: '' })
     } catch (error) {
       console.error('Error updating profile:', error)
     } finally {
@@ -96,15 +151,7 @@ function Profile() {
   // Calculate hourly rate
   const hourlyRate = userProfile?.salary ? userProfile.salary / (40 * 52) : 0
   
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
-  }
+  // Currency formatting is now handled by CurrencyContext
   
   return (
     <div className="min-h-screen bg-dark-900 p-4 pb-24">
@@ -181,14 +228,28 @@ function Profile() {
           {/* User Info */}
           <div className="flex-1">
             {isEditing ? (
-              <input
-                type="text"
-                name="displayName"
-                value={formData.displayName}
-                onChange={handleInputChange}
-                className="input-field w-full mb-2"
-                placeholder="Display Name"
-              />
+              <div className="mb-2">
+                <input
+                  type="text"
+                  name="displayName"
+                  value={formData.displayName}
+                  onChange={handleInputChange}
+                  className={`input-field w-full ${
+                    usernameStatus.available === false ? 'border-red-500' : 
+                    usernameStatus.available === true ? 'border-green-500' : ''
+                  }`}
+                  placeholder="Display Name"
+                />
+                {usernameStatus.message && (
+                  <p className={`text-xs mt-1 ${
+                    usernameStatus.checking ? 'text-dark-400' :
+                    usernameStatus.available === false ? 'text-red-400' :
+                    usernameStatus.available === true ? 'text-green-400' : 'text-dark-400'
+                  }`}>
+                    {usernameStatus.message}
+                  </p>
+                )}
+              </div>
             ) : (
               <h2 className="text-2xl font-bold text-white mb-1">
                 {userProfile?.displayName || 'Anonymous Pooper'}

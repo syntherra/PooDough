@@ -9,51 +9,12 @@ import {
   Globe
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useCurrency } from '../contexts/CurrencyContext'
 import { useNavigate } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
-// Comprehensive currency list
-const CURRENCIES = [
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'GBP', symbol: '£', name: 'British Pound' },
-  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
-  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
-  { code: 'DKK', symbol: 'kr', name: 'Danish Krone' },
-  { code: 'PLN', symbol: 'zł', name: 'Polish Zloty' },
-  { code: 'CZK', symbol: 'Kč', name: 'Czech Koruna' },
-  { code: 'HUF', symbol: 'Ft', name: 'Hungarian Forint' },
-  { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
-  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-  { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
-  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
-  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
-  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar' },
-  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
-  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
-  { code: 'ILS', symbol: '₪', name: 'Israeli Shekel' },
-  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
-  { code: 'SAR', symbol: '﷼', name: 'Saudi Riyal' },
-  { code: 'EGP', symbol: '£', name: 'Egyptian Pound' },
-  { code: 'THB', symbol: '฿', name: 'Thai Baht' },
-  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
-  { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
-  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
-  { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
-  { code: 'CLP', symbol: '$', name: 'Chilean Peso' },
-  { code: 'COP', symbol: '$', name: 'Colombian Peso' },
-  { code: 'PEN', symbol: 'S/', name: 'Peruvian Sol' },
-  { code: 'ARS', symbol: '$', name: 'Argentine Peso' },
-  { code: 'UYU', symbol: '$', name: 'Uruguayan Peso' }
-]
+// Currency list is now imported from CurrencyContext
 
 const WORK_DAYS = [
   { id: 'monday', label: 'Monday', short: 'Mon' },
@@ -66,13 +27,14 @@ const WORK_DAYS = [
 ]
 
 function Onboarding() {
-  const { updateUserProfile, user } = useAuth()
+  const { updateUserProfile, user, testDatabaseOperations } = useAuth()
+  const { currencies } = useCurrency()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   
   const [formData, setFormData] = useState({
-    currency: 'USD',
+    currency: currencies[0]?.code || 'USD',
     annualSalary: '',
     workStartTime: '09:00',
     workEndTime: '17:00',
@@ -125,11 +87,19 @@ function Onboarding() {
       return
     }
     
+    console.log('🚀 Starting onboarding completion...')
+    console.log('👤 Current user:', user)
+    console.log('📋 Form data:', formData)
+    
     setLoading(true)
     try {
-      const selectedCurrency = CURRENCIES.find(c => c.code === formData.currency)
+      const selectedCurrency = currencies.find(c => c.code === formData.currency)
       
-      await updateUserProfile({
+      if (!selectedCurrency) {
+        throw new Error('Invalid currency selected')
+      }
+      
+      const profileUpdates = {
         currency: formData.currency,
         currencySymbol: selectedCurrency.symbol,
         salary: parseFloat(formData.annualSalary),
@@ -139,17 +109,40 @@ function Onboarding() {
         workDays: formData.workDays,
         onboardingCompleted: true,
         profileCompleted: true
-      }, false) // Don't show toast from updateUserProfile
+      }
       
+      console.log('📝 Profile updates to apply:', profileUpdates)
+      
+      await updateUserProfile(profileUpdates, false) // Don't show toast from updateUserProfile
+      
+      console.log('✅ Profile update completed successfully')
       toast.success('Profile setup complete! 🎉')
       
       // Small delay to ensure state update propagates
       setTimeout(() => {
+        console.log('🏠 Navigating to home...')
         navigate('/home')
-      }, 100)
+      }, 500)
     } catch (error) {
-      console.error('Onboarding error:', error)
-      toast.error('Failed to save profile. Please try again.')
+      console.error('❌ Onboarding error:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        user: user?.uid,
+        formData
+      })
+      
+      // More specific error messages
+      if (error.code === 'permission-denied') {
+        toast.error('Permission denied. Please sign in again.')
+      } else if (error.code === 'unavailable') {
+        toast.error('Service temporarily unavailable. Please try again.')
+      } else if (error.message?.includes('auth')) {
+        toast.error('Authentication error. Please sign in again.')
+      } else {
+        toast.error('Failed to save profile. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -184,9 +177,9 @@ function Onboarding() {
             onChange={(e) => handleInputChange('currency', e.target.value)}
             className="input-field pl-10 w-full"
           >
-            {CURRENCIES.map(currency => (
+            {currencies.map(currency => (
               <option key={currency.code} value={currency.code}>
-                {currency.symbol} {currency.code} - {currency.name}
+                {currency.symbol} {currency.code} - {currency.name} ({currency.country})
               </option>
             ))}
           </select>
@@ -363,6 +356,19 @@ function Onboarding() {
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
         </div>
+        
+        {/* Debug Section - Only show in development */}
+        {process.env.NODE_ENV === 'development' && user && (
+          <div className="mb-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+            <p className="text-yellow-400 text-sm mb-2">Debug Tools:</p>
+            <button
+              onClick={testDatabaseOperations}
+              className="btn-ghost text-xs px-3 py-1"
+            >
+              Test Database Operations
+            </button>
+          </div>
+        )}
         
         {/* Navigation Buttons */}
         <div className="flex gap-4">

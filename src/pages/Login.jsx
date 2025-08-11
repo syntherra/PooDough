@@ -1,23 +1,39 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Chrome } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import LoadingSpinner from '../components/LoadingSpinner'
+import toast from 'react-hot-toast'
 
 function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, message: '' })
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     displayName: ''
   })
   
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signUp, signInWithGoogle, checkDisplayNameAvailability } = useAuth()
   
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Check username availability for signup
+    if (isSignUp) {
+      if (usernameStatus.available === false) {
+        toast.error('Please choose a different username')
+        return
+      }
+      
+      if (usernameStatus.checking) {
+        toast.error('Please wait while we check username availability')
+        return
+      }
+    }
+    
     setLoading(true)
     
     try {
@@ -44,6 +60,48 @@ function Login() {
     }
   }
   
+  // Debounced username availability check
+  const checkUsernameAvailability = useCallback(
+    async (displayName) => {
+      if (!displayName || !isSignUp) {
+        setUsernameStatus({ checking: false, available: null, message: '' })
+        return
+      }
+
+      setUsernameStatus({ checking: true, available: null, message: 'Checking availability...' })
+      
+      try {
+        const result = await checkDisplayNameAvailability(displayName)
+        setUsernameStatus({
+          checking: false,
+          available: result.available,
+          message: result.message
+        })
+      } catch (error) {
+        setUsernameStatus({
+          checking: false,
+          available: false,
+          message: 'Error checking availability'
+        })
+      }
+    },
+    [checkDisplayNameAvailability, isSignUp]
+  )
+
+  // Debounce the username check
+  useEffect(() => {
+    if (!isSignUp) {
+      setUsernameStatus({ checking: false, available: null, message: '' })
+      return
+    }
+    
+    const timeoutId = setTimeout(() => {
+      checkUsernameAvailability(formData.displayName)
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.displayName, checkUsernameAvailability, isSignUp])
+
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -101,10 +159,22 @@ function Login() {
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  className="input-field w-full"
+                  className={`input-field w-full ${
+                    usernameStatus.available === false ? 'border-red-500' : 
+                    usernameStatus.available === true ? 'border-green-500' : ''
+                  }`}
                   placeholder="Enter your display name"
                   required={isSignUp}
                 />
+                {usernameStatus.message && (
+                  <p className={`text-xs mt-1 ${
+                    usernameStatus.checking ? 'text-gray-400' :
+                    usernameStatus.available === false ? 'text-red-400' :
+                    usernameStatus.available === true ? 'text-green-400' : 'text-gray-400'
+                  }`}>
+                    {usernameStatus.message}
+                  </p>
+                )}
               </motion.div>
             )}
             

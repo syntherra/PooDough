@@ -6,15 +6,7 @@ import toast from 'react-hot-toast'
 
 const TimerContext = createContext()
 
-export function useTimer() {
-  const context = useContext(TimerContext)
-  if (!context) {
-    throw new Error('useTimer must be used within a TimerProvider')
-  }
-  return context
-}
-
-export function TimerProvider({ children }) {
+function TimerProvider({ children }) {
   const { user, userProfile, updateUserProfile } = useAuth()
   const [isRunning, setIsRunning] = useState(false)
   const [startTime, setStartTime] = useState(null)
@@ -53,12 +45,12 @@ export function TimerProvider({ children }) {
 
   // Calculate current earnings
   const calculateEarnings = useCallback((timeInSeconds) => {
-    if (!isWorkHours()) return 0
-    
     const hourlyRate = getHourlyRate()
-    const hoursElapsed = timeInSeconds / 3600
-    return hourlyRate * hoursElapsed
-  }, [getHourlyRate, isWorkHours])
+    if (hourlyRate === 0) return 0
+    
+    const hoursWorked = timeInSeconds / 3600
+    return hourlyRate * hoursWorked
+  }, [getHourlyRate])
 
   // Start timer
   const startTimer = useCallback(() => {
@@ -196,22 +188,16 @@ export function TimerProvider({ children }) {
     }
   }, [user, userProfile, loadSessions])
 
-  // Format time helper
+  // Format time helper - always shows HH:MM:SS format
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
+    const hours = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Format currency helper
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
-  }
+  // Currency formatting is now handled by CurrencyContext
 
   const value = {
     isRunning,
@@ -223,7 +209,6 @@ export function TimerProvider({ children }) {
     stopTimer,
     loadSessions,
     formatTime,
-    formatCurrency,
     isWorkHours: isWorkHours(),
     hourlyRate: getHourlyRate()
   }
@@ -235,4 +220,5 @@ export function TimerProvider({ children }) {
   )
 }
 
+export { TimerContext }
 export default TimerProvider
