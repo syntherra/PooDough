@@ -121,7 +121,7 @@ function Timer() {
       </motion.div>
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col p-0 sm:p-1 pt-4 pb-4 min-h-0">
+      <div className="flex-1 flex flex-col p-0 sm:p-1 pt-4 pb-24 min-h-0">
         {/* Toilet Paper Animation with top spacing for status text */}
         <div className="flex-1 flex items-center justify-center relative min-h-0 -mb-16">
           <PoopClockTimer 
