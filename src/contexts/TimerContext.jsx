@@ -110,7 +110,7 @@ function TimerProvider({ children }) {
       // Add to local sessions
       setSessions(prev => [sessionData, ...prev])
       
-      toast.success(`Session saved! You earned $${earnings.toFixed(2)}! 🎉`)
+      // toast.success(`Session saved! You earned $${earnings.toFixed(2)}! 🎉`)
       
       // Reset timer state
       setStartTime(null)

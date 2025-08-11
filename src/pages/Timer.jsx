@@ -123,7 +123,7 @@ function Timer() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col p-0 sm:p-1 pt-4 pb-4 min-h-0">
         {/* Toilet Paper Animation with top spacing for status text */}
-        <div className="flex-1 flex items-center justify-center relative min-h-0 -mb-24">
+        <div className="flex-1 flex items-center justify-center relative min-h-0 -mb-16">
           <PoopClockTimer 
                   isRunning={isRunning}
                   elapsedTime={elapsedTime}
@@ -131,7 +131,7 @@ function Timer() {
         </div>
         
         {/* Bottom Stats and Controls */}
-        <div className="space-y-1 flex-shrink-0 mb-1">
+        <div className="space-y-2 flex-shrink-0 mb-2">
           {/* Timer Display */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
