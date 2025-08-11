@@ -1,0 +1,223 @@
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import { useAuth } from './AuthContext'
+import toast from 'react-hot-toast'
+
+const TimerContext = createContext()
+
+export function useTimer() {
+  const context = useContext(TimerContext)
+  if (!context) {
+    throw new Error('useTimer must be used within a TimerProvider')
+  }
+  return context
+}
+
+export function TimerProvider({ children }) {
+  const { user, userProfile, updateUserProfile } = useAuth()
+  const [isRunning, setIsRunning] = useState(false)
+  const [startTime, setStartTime] = useState(null)
+  const [elapsedTime, setElapsedTime] = useState(0)
+  const [currentEarnings, setCurrentEarnings] = useState(0)
+  const [sessions, setSessions] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  // Calculate if user is currently in work hours
+  const isWorkHours = useCallback(() => {
+    if (!userProfile) return false
+    
+    const now = new Date()
+    const currentDay = now.toLocaleLowerCase().slice(0, 3) + now.toLocaleLowerCase().slice(3)
+    const currentTime = now.toTimeString().slice(0, 5)
+    
+    const workDays = userProfile.workDays || []
+    const workStart = userProfile.workHoursStart || '09:00'
+    const workEnd = userProfile.workHoursEnd || '17:00'
+    
+    const isWorkDay = workDays.some(day => 
+      currentDay.includes(day.toLowerCase().slice(0, 3))
+    )
+    
+    return isWorkDay && currentTime >= workStart && currentTime <= workEnd
+  }, [userProfile])
+
+  // Calculate hourly rate
+  const getHourlyRate = useCallback(() => {
+    if (!userProfile?.salary) return 0
+    
+    // Assuming 40 hours per week, 52 weeks per year
+    const annualWorkHours = 40 * 52
+    return userProfile.salary / annualWorkHours
+  }, [userProfile])
+
+  // Calculate current earnings
+  const calculateEarnings = useCallback((timeInSeconds) => {
+    if (!isWorkHours()) return 0
+    
+    const hourlyRate = getHourlyRate()
+    const hoursElapsed = timeInSeconds / 3600
+    return hourlyRate * hoursElapsed
+  }, [getHourlyRate, isWorkHours])
+
+  // Start timer
+  const startTimer = useCallback(() => {
+    if (!user) {
+      toast.error('Please log in to start tracking')
+      return
+    }
+    
+    const now = Date.now()
+    setStartTime(now)
+    setIsRunning(true)
+    setElapsedTime(0)
+    setCurrentEarnings(0)
+    
+    toast.success('Timer started! 💩')
+  }, [user])
+
+  // Stop timer and save session
+  const stopTimer = useCallback(async () => {
+    if (!isRunning || !startTime || !user) return
+    
+    const endTime = Date.now()
+    const totalTime = Math.floor((endTime - startTime) / 1000)
+    const earnings = calculateEarnings(totalTime)
+    
+    setIsRunning(false)
+    setLoading(true)
+    
+    try {
+      // Save session to Firestore
+      const sessionData = {
+        userId: user.uid,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        duration: totalTime,
+        earnings: earnings,
+        wasWorkHours: isWorkHours(),
+        createdAt: new Date()
+      }
+      
+      await addDoc(collection(db, 'sessions'), sessionData)
+      
+      // Update user stats
+      const newTotalSessions = (userProfile?.totalSessions || 0) + 1
+      const newTotalEarnings = (userProfile?.totalEarnings || 0) + earnings
+      const newTotalTime = (userProfile?.totalTime || 0) + totalTime
+      const newLongestSession = Math.max(userProfile?.longestSession || 0, totalTime)
+      
+      await updateUserProfile({
+        totalSessions: newTotalSessions,
+        totalEarnings: newTotalEarnings,
+        totalTime: newTotalTime,
+        longestSession: newLongestSession,
+        lastSessionAt: new Date()
+      })
+      
+      // Add to local sessions
+      setSessions(prev => [sessionData, ...prev])
+      
+      toast.success(`Session saved! You earned $${earnings.toFixed(2)}! 🎉`)
+      
+      // Reset timer state
+      setStartTime(null)
+      setElapsedTime(0)
+      setCurrentEarnings(0)
+      
+    } catch (error) {
+      console.error('Error saving session:', error)
+      toast.error('Failed to save session')
+    } finally {
+      setLoading(false)
+    }
+  }, [isRunning, startTime, user, userProfile, calculateEarnings, isWorkHours, updateUserProfile])
+
+  // Load user sessions
+  const loadSessions = useCallback(async () => {
+    if (!user) return
+    
+    try {
+      const q = query(
+        collection(db, 'sessions'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      )
+      
+      const querySnapshot = await getDocs(q)
+      const userSessions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      
+      setSessions(userSessions)
+    } catch (error) {
+      console.error('Error loading sessions:', error)
+    }
+  }, [user])
+
+  // Update timer every second when running
+  useEffect(() => {
+    let interval = null
+    
+    if (isRunning && startTime) {
+      interval = setInterval(() => {
+        const now = Date.now()
+        const elapsed = Math.floor((now - startTime) / 1000)
+        setElapsedTime(elapsed)
+        setCurrentEarnings(calculateEarnings(elapsed))
+      }, 1000)
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isRunning, startTime, calculateEarnings])
+
+  // Load sessions when user changes
+  useEffect(() => {
+    if (user) {
+      loadSessions()
+    } else {
+      setSessions([])
+    }
+  }, [user, loadSessions])
+
+  // Format time helper
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Format currency helper
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount)
+  }
+
+  const value = {
+    isRunning,
+    elapsedTime,
+    currentEarnings,
+    sessions,
+    loading,
+    startTimer,
+    stopTimer,
+    loadSessions,
+    formatTime,
+    formatCurrency,
+    isWorkHours: isWorkHours(),
+    hourlyRate: getHourlyRate()
+  }
+
+  return (
+    <TimerContext.Provider value={value}>
+      {children}
+    </TimerContext.Provider>
+  )
+}
