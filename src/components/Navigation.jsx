@@ -24,17 +24,17 @@ function Navigation() {
     {
       path: '/timer',
       icon: Timer,
-      label: 'Poop Timer'
+      label: 'Timer'
     },
     {
       path: '/history',
       icon: History,
-      label: 'Poop Log'
+      label: 'History'
     },
     {
       path: '/leaderboard',
       icon: Trophy,
-      label: 'Poop Board'
+      label: 'Leaderboard'
     },
     {
       path: '/profile',

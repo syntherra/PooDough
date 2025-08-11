@@ -110,18 +110,18 @@ function Timer() {
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="absolute top-6 left-6 z-10"
+        className="absolute top-4 left-4 z-10"
       >
         <button
           onClick={() => navigate('/home')}
-          className="p-3 rounded-full bg-dark-800 hover:bg-dark-700 text-white transition-colors"
+          className="p-2 rounded-full bg-dark-800 hover:bg-dark-700 text-white transition-colors"
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={20} />
         </button>
       </motion.div>
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col p-2 sm:p-4 pt-16 pb-8 min-h-0">
+      <div className="flex-1 flex flex-col p-2 sm:p-3 pt-10 pb-4 min-h-0">
         {/* Toilet Paper Animation with top spacing for status text */}
         <div className="flex-1 flex items-center justify-center relative min-h-0">
           <PoopClockTimer 
@@ -131,14 +131,14 @@ function Timer() {
         </div>
         
         {/* Bottom Stats and Controls */}
-        <div className="space-y-3 flex-shrink-0 mb-4">
+        <div className="space-y-2 flex-shrink-0 mb-2">
           {/* Timer Display */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2 font-mono">
+            <div className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white mb-1 font-mono">
               {isRunning ? `${formatTime(elapsedTime)}.${milliseconds.toString().padStart(2, '0')}` : formatTime(elapsedTime)}
             </div>
             
@@ -147,9 +147,9 @@ function Timer() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-center gap-2 text-lg sm:text-xl font-bold mb-2"
+                className="flex items-center justify-center gap-2 text-base sm:text-lg font-bold mb-1"
               >
-                <span className="text-green-400 text-2xl">💰</span>
+                <span className="text-green-400 text-xl">💰</span>
                 <span className="text-green-400">
                   {isRunning ? formatCurrency(currentEarnings, { maximumFractionDigits: 4 }) : formatCurrency(currentEarnings)}
                 </span>
@@ -168,15 +168,15 @@ function Timer() {
               <motion.button
                 onClick={startTimer}
                 disabled={loading}
-                className="btn-primary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
+                className="btn-primary flex items-center gap-2 text-sm sm:text-base py-2 px-4 sm:py-3 sm:px-6 rounded-xl"
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.05 }}
               >
                 {loading ? (
-                  <LoadingSpinner size="md" />
+                  <LoadingSpinner size="sm" />
                 ) : (
                   <>
-                    <Play size={24} />
+                    <Play size={20} />
                     <span>Start Pooping! 💩</span>
                   </>
                 )}
@@ -185,15 +185,15 @@ function Timer() {
               <motion.button
                 onClick={handleStop}
                 disabled={loading}
-                className="btn-secondary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
+                className="btn-secondary flex items-center gap-2 text-sm sm:text-base py-2 px-4 sm:py-3 sm:px-6 rounded-xl"
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.05 }}
               >
                 {loading ? (
-                  <LoadingSpinner size="md" />
+                  <LoadingSpinner size="sm" />
                 ) : (
                   <>
-                    <Square size={24} />
+                    <Square size={20} />
                     <span>Flush & Finish! 🚽</span>
                   </>
                 )}
