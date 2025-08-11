@@ -168,9 +168,10 @@ function Timer() {
               <motion.button
                 onClick={startTimer}
                 disabled={loading}
-                className="btn-primary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
-                whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.05 }}
+                className="btn-primary flex items-center gap-2 text-base sm:text-lg py-4 px-8 sm:py-5 sm:px-10 rounded-xl min-h-[56px] min-w-[200px] touch-manipulation select-none"
+                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.02 }}
+                style={{ touchAction: 'manipulation' }}
               >
                 {loading ? (
                   <LoadingSpinner size="sm" />
@@ -185,9 +186,10 @@ function Timer() {
               <motion.button
                 onClick={handleStop}
                 disabled={loading}
-                className="btn-secondary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
-                whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.05 }}
+                className="btn-secondary flex items-center gap-2 text-base sm:text-lg py-4 px-8 sm:py-5 sm:px-10 rounded-xl min-h-[56px] min-w-[200px] touch-manipulation select-none"
+                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.02 }}
+                style={{ touchAction: 'manipulation' }}
               >
                 {loading ? (
                   <LoadingSpinner size="sm" />
