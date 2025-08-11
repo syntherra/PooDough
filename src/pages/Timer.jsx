@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Square, ArrowLeft, DollarSign, Clock } from 'lucide-react'
+import { Play, Square, ArrowLeft, Coins, Clock } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer'
 import { useAuth } from '../hooks/useAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
 import { useNavigate } from 'react-router-dom'
 import Confetti from 'react-confetti'
 import LoadingSpinner from '../components/LoadingSpinner'
+import PoopClockTimer from '../components/PoopClockTimer'
+import FallingDollars from '../components/FallingDollars'
 
 function Timer() {
   const { 
@@ -29,6 +31,7 @@ function Timer() {
   const [lastSession, setLastSession] = useState(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight })
+  const [milliseconds, setMilliseconds] = useState(0)
   
   // Update window size for confetti
   useEffect(() => {
@@ -38,6 +41,23 @@ function Timer() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Update milliseconds counter for more engaging display during sessions
+  useEffect(() => {
+    let interval = null
+    
+    if (isRunning) {
+      interval = setInterval(() => {
+        setMilliseconds(prev => (prev + 1) % 100)
+      }, 10) // Update every 10ms
+    } else {
+      setMilliseconds(0)
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isRunning])
   
   // Check if user has completed onboarding
   if (!userProfile?.onboardingCompleted) {
@@ -83,6 +103,9 @@ function Timer() {
         </div>
       )}
       
+      {/* Falling Dollars Animation */}
+      <FallingDollars isActive={isRunning} />
+      
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -97,75 +120,87 @@ function Timer() {
         </button>
       </motion.div>
       
-      {/* Main Timer Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
-        {/* Timer Display */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center mb-8"
-        >
-          <div className="text-5xl sm:text-6xl md:text-7xl font-display font-bold text-white mb-6 font-mono">
-            {formatTime(elapsedTime)}
-          </div>
-          
-          {/* Earnings Display */}
-          {isRunning && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-4"
-            >
-              <DollarSign className="text-green-400" size={28} />
-              <span className="text-green-400">
-                {formatCurrency(currentEarnings)}
-              </span>
-            </motion.div>
-          )}
-        </motion.div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col p-2 sm:p-4 pt-16 pb-8 min-h-0">
+        {/* Toilet Paper Animation with top spacing for status text */}
+        <div className="flex-1 flex items-center justify-center relative min-h-0">
+          <PoopClockTimer 
+                  isRunning={isRunning}
+                  elapsedTime={elapsedTime}
+                />
+        </div>
         
-        {/* Control Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {!isRunning ? (
-            <motion.button
-              onClick={startTimer}
-              disabled={loading}
-              className="btn-primary flex items-center gap-3 text-lg sm:text-xl py-4 px-8 sm:py-5 sm:px-10 rounded-xl"
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              {loading ? (
-                <LoadingSpinner size="md" />
-              ) : (
-                <>
-                  <Play size={24} />
-                  <span>Start Session</span>
-                </>
-              )}
-            </motion.button>
-          ) : (
-            <motion.button
-              onClick={handleStop}
-              disabled={loading}
-              className="btn-secondary flex items-center gap-3 text-lg sm:text-xl py-4 px-8 sm:py-5 sm:px-10 rounded-xl"
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              {loading ? (
-                <LoadingSpinner size="md" />
-              ) : (
-                <>
-                  <Square size={24} />
-                  <span>Stop Session</span>
-                </>
-              )}
-            </motion.button>
-          )}
-        </motion.div>
+        {/* Bottom Stats and Controls */}
+        <div className="space-y-3 flex-shrink-0 mb-4">
+          {/* Timer Display */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <div className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2 font-mono">
+              {isRunning ? `${formatTime(elapsedTime)}.${milliseconds.toString().padStart(2, '0')}` : formatTime(elapsedTime)}
+            </div>
+            
+            {/* Earnings Display */}
+            {isRunning && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center gap-2 text-lg sm:text-xl font-bold mb-2"
+              >
+                <span className="text-green-400 text-2xl">💰</span>
+                <span className="text-green-400">
+                  {isRunning ? formatCurrency(currentEarnings, { maximumFractionDigits: 4 }) : formatCurrency(currentEarnings)}
+                </span>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* Control Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex justify-center"
+          >
+            {!isRunning ? (
+              <motion.button
+                onClick={startTimer}
+                disabled={loading}
+                className="btn-primary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                {loading ? (
+                  <LoadingSpinner size="md" />
+                ) : (
+                  <>
+                    <Play size={24} />
+                    <span>Start Session</span>
+                  </>
+                )}
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={handleStop}
+                disabled={loading}
+                className="btn-secondary flex items-center gap-2 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8 rounded-xl"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                {loading ? (
+                  <LoadingSpinner size="md" />
+                ) : (
+                  <>
+                    <Square size={24} />
+                    <span>Stop Session</span>
+                  </>
+                )}
+              </motion.button>
+            )}
+          </motion.div>
+        </div>
       </div>
       
       {/* Session Summary Modal */}
