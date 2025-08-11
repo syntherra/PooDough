@@ -207,17 +207,17 @@ export function CurrencyProvider({ children }) {
   }
 
   // Get separate USD and local currency values for leaderboard
-  const getCurrencyDisplay = (amount, originalCurrency = userCurrency) => {
-    const localFormatted = formatCurrency(amount, originalCurrency)
+  const getCurrencyDisplay = (amount, leaderCurrency = userCurrency) => {
+    const localFormatted = formatCurrency(amount, leaderCurrency)
     
-    if (originalCurrency === 'USD') {
+    if (leaderCurrency === 'USD') {
       return {
         usd: localFormatted,
         local: null
       }
     }
     
-    const usdAmount = convertCurrency(amount, originalCurrency, 'USD')
+    const usdAmount = convertCurrency(amount, leaderCurrency, 'USD')
     const usdFormatted = formatCurrency(usdAmount, 'USD')
     
     return {

@@ -396,7 +396,7 @@ function Leaderboard() {
             </div>
             <div className="text-right">
               {(() => {
-                const currencyDisplay = getCurrencyDisplay(userProfile.totalEarnings || 0)
+                const currencyDisplay = getCurrencyDisplay(userProfile.totalEarnings || 0, userProfile.currency || 'USD')
                 return (
                   <div>
                     <p className="text-primary-400 font-bold text-lg">
@@ -511,7 +511,7 @@ function Leaderboard() {
                     {/* Stats */}
                     <div className="text-right">
                       {(() => {
-                        const currencyDisplay = getCurrencyDisplay(leader.totalEarnings || 0)
+                        const currencyDisplay = getCurrencyDisplay(leader.totalEarnings || 0, leader.currency || 'USD')
                         return (
                           <div>
                             <p className="text-primary-400 font-bold text-lg">
@@ -665,7 +665,7 @@ function Leaderboard() {
                             {user.displayName || 'Anonymous'}
                           </p>
                           <p className="text-dark-400 text-sm">
-                            {user.totalEarnings ? getCurrencyDisplay(user.totalEarnings).usd : '$0.00'} earned
+                            {user.totalEarnings ? getCurrencyDisplay(user.totalEarnings, user.currency || 'USD').usd : '$0.00'} earned
                           </p>
                         </div>
                       </div>
@@ -760,7 +760,7 @@ function Leaderboard() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             {(() => {
-                              const currencyDisplay = getCurrencyDisplay(person.totalEarnings || 0)
+                              const currencyDisplay = getCurrencyDisplay(person.totalEarnings || 0, person.currency || 'USD')
                               return (
                                 <div>
                                   <p className="text-primary-400 font-bold text-lg">
