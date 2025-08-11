@@ -404,7 +404,7 @@ function Onboarding() {
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <span>Complete Setup</span>
+                  <span>Let's Go!</span>
                   <Check size={20} />
                 </>
               )}
