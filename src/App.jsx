@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import TimerProvider from './contexts/TimerContext'
 import Layout from './components/Layout'
@@ -13,9 +13,31 @@ import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Debug from './pages/Debug'
 import LoadingSpinner from './components/LoadingSpinner'
+import NotificationPrompt from './components/NotificationPrompt'
 
 function App() {
   const { user, loading, userProfile } = useAuth()
+  const navigate = useNavigate()
+  
+  // Listen for service worker messages (notification clicks)
+  useEffect(() => {
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data?.type === 'NOTIFICATION_CLICK') {
+        const { targetUrl } = event.data
+        if (targetUrl && targetUrl !== '/') {
+          navigate(targetUrl)
+        }
+      }
+    }
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+      
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+      }
+    }
+  }, [navigate])
   
   if (loading) {
     return (
@@ -27,6 +49,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <NotificationPrompt />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />

@@ -15,7 +15,8 @@ import {
   X,
   Bell,
   UserCheck,
-  UserX
+  UserX,
+  Clock
 } from 'lucide-react'
 import { 
   collection, 
@@ -37,6 +38,7 @@ import { useCurrency } from '../contexts/CurrencyContext'
 import { useTimer } from '../hooks/useTimer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import notificationService from '../services/notificationService'
 
 function Leaderboard() {
   const { user, userProfile } = useAuth()
@@ -47,6 +49,8 @@ function Leaderboard() {
   const [friendsLeaders, setFriendsLeaders] = useState([])
   const [loading, setLoading] = useState(true)
   const [userRank, setUserRank] = useState(null)
+  const [timeUntilReset, setTimeUntilReset] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [previousRankings, setPreviousRankings] = useState(new Map())
   
   // Friends system state
   const [friends, setFriends] = useState([])
@@ -56,6 +60,43 @@ function Leaderboard() {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [pendingRequests, setPendingRequests] = useState([])
+  
+  // Check for rank changes and send notifications
+  const checkRankChanges = async (newLeaders) => {
+    if (!user || previousRankings.size === 0) return
+    
+    // Create current rankings map (only top 10 for efficiency)
+    const currentRankings = new Map()
+    newLeaders.slice(0, 10).forEach((leader, index) => {
+      currentRankings.set(leader.id, index + 1)
+    })
+    
+    // Check for users who were overtaken in top 5
+    for (const [userId, oldRank] of previousRankings) {
+      const newRank = currentRankings.get(userId)
+      
+      // Skip if user is not in current top 10 or wasn't in top 5 before
+      if (!newRank || oldRank > 5) continue
+      
+      // Check if user was overtaken (rank got worse)
+      if (newRank > oldRank) {
+        // Find who overtook them (user now at their old position)
+        const overtaker = newLeaders.find(leader => 
+          currentRankings.get(leader.id) === oldRank
+        )
+        
+        if (overtaker && overtaker.id !== userId) {
+          // Send notification to the overtaken user
+          await notificationService.sendRankOvertakenNotification(
+            userId,
+            overtaker.displayName || 'Someone',
+            newRank,
+            oldRank
+          )
+        }
+      }
+    }
+  }
   
   // Fetch global leaderboard
   const fetchGlobalLeaderboard = async () => {
@@ -73,7 +114,17 @@ function Leaderboard() {
         ...doc.data()
       }))
       
+      // Check for rank changes before updating state
+      await checkRankChanges(leaders)
+      
       setGlobalLeaders(leaders)
+      
+      // Update previous rankings (only top 10 for efficiency)
+      const newRankings = new Map()
+      leaders.slice(0, 10).forEach((leader, index) => {
+        newRankings.set(leader.id, index + 1)
+      })
+      setPreviousRankings(newRankings)
       
       // Find current user's rank
       const currentUserRank = leaders.findIndex(leader => leader.id === user?.uid)
@@ -151,6 +202,16 @@ function Leaderboard() {
         createdAt: serverTimestamp()
       })
       
+      // Send push notification
+      try {
+        await notificationService.sendFriendRequestNotification(
+          toUserId, 
+          user.displayName || 'Anonymous'
+        )
+      } catch (notifError) {
+        console.error('Failed to send notification:', notifError)
+      }
+      
       // Add to pending requests
       setPendingRequests(prev => [...prev, { toUserId, toUserName }])
       
@@ -180,6 +241,16 @@ function Leaderboard() {
         status: 'accepted',
         acceptedAt: serverTimestamp()
       })
+      
+      // Send push notification to the original sender
+      try {
+        await notificationService.sendFriendAcceptedNotification(
+          fromUserId,
+          user.displayName || 'Anonymous'
+        )
+      } catch (notifError) {
+        console.error('Failed to send notification:', notifError)
+      }
       
       // Remove from friend requests
       setFriendRequests(prev => prev.filter(r => r.id !== requestId))
@@ -332,6 +403,47 @@ function Leaderboard() {
     }
   }, [user])
   
+  // Real-time listener for global leaderboard rank changes
+  useEffect(() => {
+    if (!user) return
+    
+    const leaderboardQuery = query(
+      collection(db, 'users'),
+      orderBy('totalTime', 'desc'),
+      limit(10) // Only monitor top 10 for rank change notifications
+    )
+    
+    const unsubscribeLeaderboard = onSnapshot(leaderboardQuery, async (snapshot) => {
+      const leaders = snapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        rank: index + 1,
+        ...doc.data()
+      }))
+      
+      // Check for rank changes before updating state
+      await checkRankChanges(leaders)
+      
+      // Update previous rankings for next comparison
+      const newRankings = new Map()
+      leaders.forEach((leader, index) => {
+        newRankings.set(leader.id, index + 1)
+      })
+      setPreviousRankings(newRankings)
+      
+      // Update global leaders if this affects the full leaderboard
+      if (activeTab === 'global') {
+        // Fetch full leaderboard for display
+        await fetchGlobalLeaderboard()
+      }
+    }, (error) => {
+      console.error('Error listening to leaderboard changes:', error)
+    })
+    
+    return () => {
+      unsubscribeLeaderboard()
+    }
+  }, [user, activeTab])
+  
   // Search users when search query changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -354,6 +466,27 @@ function Leaderboard() {
     return { title: 'Bathroom Beginner', icon: '🚽', color: 'text-dark-400' }
   }
   
+  // Calculate time until end of month
+  useEffect(() => {
+    const calculateTimeUntilReset = () => {
+      const now = new Date()
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+      const timeDiff = nextMonth.getTime() - now.getTime()
+      
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
+      
+      setTimeUntilReset({ days, hours, minutes, seconds })
+    }
+    
+    calculateTimeUntilReset()
+    const interval = setInterval(calculateTimeUntilReset, 1000)
+    
+    return () => clearInterval(interval)
+  }, [])
+  
   // Currency formatting is now handled by CurrencyContext
   
   const currentLeaders = activeTab === 'global' ? globalLeaders : friendsLeaders
@@ -369,9 +502,18 @@ function Leaderboard() {
         <h1 className="text-3xl font-display font-bold gradient-text mb-2">
           🏆 Poop Champions Board
         </h1>
-        <p className="text-dark-400">
+        <p className="text-dark-400 mb-3">
           See who's making the most toilet treasure! 💩💰
         </p>
+        
+        {/* Minimalist Reset Timer */}
+        <div className="flex items-center justify-center gap-2 text-sm text-dark-400">
+          <Clock className="w-4 h-4" />
+          <span>Resets in:</span>
+          <span className="text-primary-400 font-mono">
+            {timeUntilReset.days}d {timeUntilReset.hours.toString().padStart(2, '0')}h {timeUntilReset.minutes.toString().padStart(2, '0')}m {timeUntilReset.seconds.toString().padStart(2, '0')}s
+          </span>
+        </div>
       </motion.div>
       
       {/* User's Current Rank */}

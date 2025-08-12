@@ -10,6 +10,7 @@ import {
 import { doc, setDoc, getDoc, query, collection, where, getDocs } from 'firebase/firestore'
 import { auth, googleProvider, db } from '../lib/firebase'
 import toast from 'react-hot-toast'
+import notificationService from '../services/notificationService'
 
 export const AuthContext = createContext()
 
@@ -260,6 +261,17 @@ export default function AuthProvider({ children }) {
       if (authUser) {
         setUser(authUser)
         await createUserProfile(authUser)
+        // Initialize notification service only if permission is already granted
+        try {
+          if (Notification.permission === 'granted') {
+            await notificationService.initialize(authUser.uid)
+          } else {
+            // Just setup the foreground listener without requesting permission
+            notificationService.setupForegroundListener()
+          }
+        } catch (error) {
+          console.error('Failed to initialize notifications:', error)
+        }
       } else {
         setUser(null)
         setUserProfile(null)

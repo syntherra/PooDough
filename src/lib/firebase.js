@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getAnalytics } from 'firebase/analytics'
+import { getMessaging, getToken, onMessage } from 'firebase/messaging'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,6 +23,18 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+
+// Initialize Messaging
+let messaging = null
+try {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    messaging = getMessaging(app)
+  }
+} catch (error) {
+  console.warn('Messaging initialization failed:', error.message)
+}
+
+export { messaging, getToken, onMessage }
 
 // Initialize Analytics with error handling
 let analytics = null

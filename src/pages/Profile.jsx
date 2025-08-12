@@ -18,6 +18,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
 import { useTimer } from '../hooks/useTimer'
 import LoadingSpinner from '../components/LoadingSpinner'
+import NotificationSettings from '../components/NotificationSettings'
 import toast from 'react-hot-toast'
 
 function Profile() {
@@ -451,6 +452,15 @@ function Profile() {
             </div>
           </div>
         </div>
+      </motion.div>
+      
+      {/* Notification Settings */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <NotificationSettings />
       </motion.div>
       
       {/* Account Actions */}
