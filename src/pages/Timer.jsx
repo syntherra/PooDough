@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Square, ArrowLeft, Coins, Clock } from 'lucide-react'
+import { Play, Square, ArrowLeft, Coins, Clock, Trophy } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer'
 import { useAuth } from '../hooks/useAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
 import { useNavigate } from 'react-router-dom'
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { db } from '../lib/firebase'
 import Confetti from 'react-confetti'
 import LoadingSpinner from '../components/LoadingSpinner'
 import PoopClockTimer from '../components/PoopClockTimer'
@@ -32,6 +34,7 @@ function Timer() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight })
   const [milliseconds, setMilliseconds] = useState(0)
+  const [userRank, setUserRank] = useState(null)
   
   // Update window size for confetti
   useEffect(() => {
@@ -59,6 +62,33 @@ function Timer() {
     }
   }, [isRunning])
   
+  // Fetch user's current leaderboard ranking
+  const fetchUserRank = async () => {
+    if (!userProfile?.uid) return null
+    
+    try {
+      const q = query(
+        collection(db, 'users'),
+        orderBy('totalTime', 'desc'),
+        limit(100) // Get top 100 to find user's rank
+      )
+      
+      const querySnapshot = await getDocs(q)
+      const leaders = querySnapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        rank: index + 1,
+        ...doc.data()
+      }))
+      
+      // Find current user's rank
+      const currentUserRank = leaders.findIndex(leader => leader.id === userProfile.uid)
+      return currentUserRank !== -1 ? currentUserRank + 1 : null
+    } catch (error) {
+      console.error('Error fetching user rank:', error)
+      return null
+    }
+  }
+  
   // Check if user has completed onboarding
   if (!userProfile?.onboardingCompleted) {
     navigate('/onboarding')
@@ -76,6 +106,10 @@ function Timer() {
     }
     
     setLastSession(sessionData)
+    
+    // Fetch user's current leaderboard ranking
+    const rank = await fetchUserRank()
+    setUserRank(rank)
     
     // Stop timer and show summary with confetti
     await stopTimer()
@@ -247,6 +281,15 @@ function Timer() {
                       {lastSession.wasWorkHours ? 'Paid Poop Break! 💰' : 'Personal Throne Time 🚽'}
                     </span>
                   </div>
+                  {userRank && (
+                    <div className="flex justify-between items-center p-3 bg-dark-800 rounded-lg border border-primary-500/30">
+                      <span className="text-dark-300 flex items-center gap-2">
+                        <Trophy size={16} className="text-yellow-400" />
+                        Leaderboard Rank
+                      </span>
+                      <span className="text-primary-400 font-bold">#{userRank}</span>
+                    </div>
+                  )}
                 </div>
                 
                 <button
