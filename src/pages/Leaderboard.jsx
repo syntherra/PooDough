@@ -34,12 +34,14 @@ import {
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { useTimer } from '../hooks/useTimer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 function Leaderboard() {
   const { user, userProfile } = useAuth()
   const { getCurrencyDisplay } = useCurrency()
+  const { formatTime } = useTimer()
   const [activeTab, setActiveTab] = useState('global')
   const [globalLeaders, setGlobalLeaders] = useState([])
   const [friendsLeaders, setFriendsLeaders] = useState([])
@@ -60,7 +62,7 @@ function Leaderboard() {
     try {
       const q = query(
         collection(db, 'users'),
-        orderBy('totalEarnings', 'desc'),
+        orderBy('totalTime', 'desc'),
         limit(50)
       )
       
@@ -315,8 +317,8 @@ function Leaderboard() {
         }
       }
       
-      // Sort friends by total earnings for leaderboard
-      const sortedFriends = friendsList.sort((a, b) => (b.totalEarnings || 0) - (a.totalEarnings || 0))
+      // Sort friends by total time for leaderboard
+      const sortedFriends = friendsList.sort((a, b) => (b.totalTime || 0) - (a.totalTime || 0))
       setFriends(sortedFriends)
       setFriendsLeaders(sortedFriends)
     }, (error) => {
@@ -340,15 +342,15 @@ function Leaderboard() {
   }, [searchQuery, friends, pendingRequests, friendRequests])
   
   // Get rank title based on position
-  const getRankTitle = (rank, totalEarnings) => {
+  const getRankTitle = (rank, totalTime) => {
     if (rank === 1) return { title: 'Porcelain Emperor', icon: '👑', color: 'text-yellow-400' }
     if (rank === 2) return { title: 'Flush Master', icon: '🥈', color: 'text-gray-300' }
     if (rank === 3) return { title: 'Toilet Titan', icon: '🥉', color: 'text-amber-600' }
     if (rank <= 10) return { title: 'Bathroom Baron', icon: '🏆', color: 'text-purple-400' }
     if (rank <= 25) return { title: 'Restroom Royalty', icon: '👸', color: 'text-blue-400' }
     if (rank <= 50) return { title: 'Loo Legend', icon: '⭐', color: 'text-green-400' }
-    if (totalEarnings >= 100) return { title: 'Poop Prodigy', icon: '💎', color: 'text-cyan-400' }
-    if (totalEarnings >= 50) return { title: 'Toilet Trainee', icon: '🎯', color: 'text-orange-400' }
+    if (totalTime >= 36000) return { title: 'Poop Prodigy', icon: '💎', color: 'text-cyan-400' } // 10+ hours
+    if (totalTime >= 18000) return { title: 'Toilet Trainee', icon: '🎯', color: 'text-orange-400' } // 5+ hours
     return { title: 'Bathroom Beginner', icon: '🚽', color: 'text-dark-400' }
   }
   
@@ -383,36 +385,34 @@ function Leaderboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="text-2xl">
-                {getRankTitle(userRank || 999, userProfile.totalEarnings || 0).icon}
+                {getRankTitle(userRank || 999, userProfile.totalTime || 0).icon}
               </div>
               <div>
                 <p className="text-white font-semibold">
                   {user?.displayName || 'You'}
                 </p>
-                <p className={`text-sm ${getRankTitle(userRank || 999, userProfile.totalEarnings || 0).color}`}>
-                  {getRankTitle(userRank || 999, userProfile.totalEarnings || 0).title}
+                <p className={`text-sm ${getRankTitle(userRank || 999, userProfile.totalTime || 0).color}`}>
+                  {getRankTitle(userRank || 999, userProfile.totalTime || 0).title}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              {(() => {
-                const currencyDisplay = getCurrencyDisplay(userProfile.totalEarnings || 0, userProfile.currency || 'USD')
-                return (
-                  <div>
-                    <p className="text-primary-400 font-bold text-lg">
-                      {currencyDisplay.usd}
-                    </p>
-                    {currencyDisplay.local && (
-                      <p className="text-dark-400 text-xs">
-                        {currencyDisplay.local}
-                      </p>
-                    )}
-                  </div>
-                )
-              })()}
+              <p className="text-primary-400 font-bold text-xl">
+                {formatTime(userProfile.totalTime || 0)}
+              </p>
               <p className="text-dark-400 text-sm">
                 {userRank ? `#${userRank}` : 'Unranked'}
               </p>
+              {(() => {
+                const currencyDisplay = getCurrencyDisplay(userProfile.totalEarnings || 0, userProfile.currency || 'USD');
+                return (
+                  <div className="mt-2">
+                    <p className="text-dark-300 text-sm">
+                      {currencyDisplay.local || currencyDisplay.usd}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </motion.div>
@@ -464,7 +464,7 @@ function Leaderboard() {
         >
           {globalLeaders.length > 0 ? (
             globalLeaders.map((leader, index) => {
-              const rankInfo = getRankTitle(leader.rank, leader.totalEarnings || 0)
+              const rankInfo = getRankTitle(leader.rank, leader.totalTime || 0)
               const isCurrentUser = leader.id === user?.uid
               
               return (
@@ -510,30 +510,25 @@ function Leaderboard() {
                     
                     {/* Stats */}
                     <div className="text-right">
+                      <p className="text-primary-400 font-bold text-xl">
+                        {formatTime(leader.totalTime || 0)}
+                      </p>
+                      {leader.currentStreak > 0 && (
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <Zap size={14} className="text-yellow-400" />
+                          <span className="text-yellow-400 text-sm font-medium">{leader.currentStreak}</span>
+                        </div>
+                      )}
                       {(() => {
                         const currencyDisplay = getCurrencyDisplay(leader.totalEarnings || 0, leader.currency || 'USD')
                         return (
-                          <div>
-                            <p className="text-primary-400 font-bold text-lg">
-                              {currencyDisplay.usd}
+                          <div className="mt-2">
+                            <p className="text-dark-300 text-sm">
+                              {currencyDisplay.local || currencyDisplay.usd}
                             </p>
-                            {currencyDisplay.local && (
-                              <p className="text-dark-400 text-xs">
-                                {currencyDisplay.local}
-                              </p>
-                            )}
                           </div>
                         )
                       })()}
-                      <div className="flex items-center gap-3 text-sm text-dark-400 mt-1">
-                        <span>{leader.totalSessions || 0} sessions</span>
-                        {leader.currentStreak > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Zap size={12} className="text-yellow-400" />
-                            {leader.currentStreak}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -665,7 +660,7 @@ function Leaderboard() {
                             {user.displayName || 'Anonymous'}
                           </p>
                           <p className="text-dark-400 text-sm">
-                            {user.totalEarnings ? getCurrencyDisplay(user.totalEarnings, user.currency || 'USD').usd : '$0.00'} earned
+                            {formatTime(user.totalTime || 0)} throne time
                           </p>
                         </div>
                       </div>
@@ -708,11 +703,11 @@ function Leaderboard() {
                     isCurrentUser: true
                   })
                 }
-                // Sort by total earnings
-                combinedList.sort((a, b) => (b.totalEarnings || 0) - (a.totalEarnings || 0))
+                // Sort by total time
+                combinedList.sort((a, b) => (b.totalTime || 0) - (a.totalTime || 0))
                 
                 return combinedList.map((person, index) => {
-                  const rankInfo = getRankTitle(person.rank, person.totalEarnings || 0)
+                  const rankInfo = getRankTitle(person.rank, person.totalTime || 0)
                   const isCurrentUser = person.id === user?.uid
                   
                   return (
@@ -759,30 +754,25 @@ function Leaderboard() {
                         {/* Stats and Actions */}
                         <div className="flex items-center gap-4">
                           <div className="text-right">
+                            <p className="text-primary-400 font-bold text-xl">
+                              {formatTime(person.totalTime || 0)}
+                            </p>
+                            {person.currentStreak > 0 && (
+                              <div className="flex items-center justify-end gap-1 mt-1">
+                                <Zap size={14} className="text-yellow-400" />
+                                <span className="text-yellow-400 text-sm font-medium">{person.currentStreak}</span>
+                              </div>
+                            )}
                             {(() => {
-                              const currencyDisplay = getCurrencyDisplay(person.totalEarnings || 0, person.currency || 'USD')
+                              const currencyDisplay = getCurrencyDisplay(person.totalEarnings || 0, person.currency || 'USD');
                               return (
-                                <div>
-                                  <p className="text-primary-400 font-bold text-lg">
-                                    {currencyDisplay.usd}
+                                <div className="mt-2">
+                                  <p className="text-dark-300 text-sm">
+                                    {currencyDisplay.local || currencyDisplay.usd}
                                   </p>
-                                  {currencyDisplay.local && (
-                                    <p className="text-dark-400 text-xs">
-                                      {currencyDisplay.local}
-                                    </p>
-                                  )}
                                 </div>
-                              )
+                              );
                             })()}
-                            <div className="flex items-center gap-3 text-sm text-dark-400 mt-1">
-                              <span>{person.totalSessions || 0} sessions</span>
-                              {person.currentStreak > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Zap size={12} className="text-yellow-400" />
-                                  {person.currentStreak}
-                                </span>
-                              )}
-                            </div>
                           </div>
                           
                           {/* Remove Friend Button - only for friends, not current user */}
